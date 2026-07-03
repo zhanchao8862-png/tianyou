@@ -1,0 +1,1 @@
+cd "C:\Users\Administrator\.qclaw\workspace-tfxjjhfnjialcuju\tianyou_editor" && C:\Python27\python.exe apply_patches.py

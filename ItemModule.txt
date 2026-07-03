@@ -1,0 +1,22 @@
+1: class ItemModule(EditorModule):
+2:     """Item editor module."""
+3:     def __init__(self, editor):
+4:         super(ItemModule, self).__init__(editor, u'items')
+5:         self.items_header = u""
+6:         self.items_entries = []
+7:         self.items_footer = u""
+8:         self.items_fields = []
+9:         self._items_undo_stack = []
+10:         self._items_redo_stack = []
+11:         self.items_lb = None
+12:         self.items_search_var = None
+13:         self.items_info_text = None
+14:         self.items_raw_text = None
+15:         self.items_detail_title = None
+16:         self.items_tab_btns = {}
+17:         self.items_tab_frames = {}
+18:         self.items_selected_idx = -1
+19:         self._items_panel = None
+20:         self._items_loaded = False
+21: 
+22: 

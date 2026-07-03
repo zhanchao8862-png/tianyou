@@ -1,0 +1,5 @@
+Total troops: 1667
+Inline upgrades: 11
+From function calls: 1
+Total with upgrades: 160
+Roots: 1463  Leafs: 1507  Branches: 67  Multi-parent: 8

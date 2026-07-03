@@ -1,0 +1,156 @@
+925:     def __init__(self):
+926:         self.root = tk.Tk()
+927:         try:
+928:             self.root.geometry("1280x850+100+50")
+929:         except:
+930:             self.root.geometry("1280x850")
+931: 
+932:         # ── Config ──
+933:         if hasattr(sys, 'frozen'):
+934:             self._config_path = os.path.join(os.path.dirname(sys.executable), 'tianyou_config.json')
+935:         else:
+936:             self._config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'tianyou_config.json')
+937:         self._config = self._load_config()
+938: 
+939:         # ── Project State ──
+940:         self.mod_path = self._config.get('mod_path', '')
+941:         self.source_path = self._config.get('source_path', '')
+942: 
+943:         # ── Module instances ──
+944:         self._troop_module = TroopModule(self)
+945:         self._item_module = ItemModule(self)
+946:         self._modules = {u'troops': self._troop_module, u'items': self._item_module}
+947:         self._active_module = None
+948: 
+949:         self.translation_path = self._config.get('translation_path', '')
+950:         self.module_info_path = self._config.get('module_info_path', '')
+951:         self.build_bat_path = self._config.get('build_bat_path', '')
+952:         self.font_size = self._config.get('font_size', 10)
+953: 
+954:         # Source data
+955:         self.selected_idx = -1
+956: 
+957:         self._current_module = ''   # 'troops' | 'items' | ...
+958:         self._modules_loaded = set()  # track which modules have been loaded
+959:         # Items
+960:         self.items = []               # [{'id':'itm_xxx', 'name':'...', 'raw':'...'}]
+961:         self.item_lookup = {}         # 'itm_xxx' -> item dict
+962:         self.item_list = []           # [('itm_xxx', '中文名'), ...] for display
+963: 
+964:         # Translations
+965:         self.troop_cn = {}            # 'trp_xxx' -> 中文名
+966:         self.item_cn = {}             # 'itm_xxx' -> 中文名
+967:         self.faction_data = []       # [(fac_id, en_name, cn_name), ...]
+968:         self.faction_cn = {}         # 'fac_xxx' -> 中文名
+969:         self.troop_cn_pl = {}        # 'trp_xxx_pl' -> 中文复数名
+970: 
+971:         # Undo/Redo
+972: 
+973:         # ── Build UI ──
+974:         self._build_menubar()
+975:         self._build_ui()
+976:         self._build_statusbar()
+977:         # Root-level mousewheel dispatch: Windows sends MouseWheel to focused
+978:         # widget, not the widget under cursor. We check cursor position instead.
+979:         # Neutralize default class-level scroll bindings so bind_all has sole control.
+980:         self.root.bind_class('Listbox', '<MouseWheel>', lambda e: None)
+981:         self.root.bind_class('Canvas', '<MouseWheel>', lambda e: None)
+982:         self.root.bind_all('<MouseWheel>', self._on_global_wheel)
+983:         self._set_ui_state(False)
+984: 
+985:         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
+986: 
+987:         # Auto-load on startup if paths are valid
+988:         self.status.config(text=u"就绪 - [文件] → [打开MOD] 加载项目")
+989:         self._update_title()
+990: 
+991:         # Apply saved appearance
+992:         if self._config.get('bg_color'):
+993:             self._apply_bg_color(self.root, self._config['bg_color'])
+994:         self._apply_font_size(self.font_size)
+995: 
+996:         if self.mod_path and os.path.isdir(self.mod_path):
+997:             self.root.after(100, self._auto_load)
+998: 
+999:         self.root.bind('<Control-z>', lambda e: self._undo())
+1000:         self.root.bind('<Control-Z>', lambda e: self._undo())
+1001:         self.root.bind('<Control-y>', lambda e: self._redo())
+1002:         self.root.bind('<Control-Y>', lambda e: self._redo())
+1003:         self.root.bind('<Control-s>', lambda e: self._save_current_module())
+1004:         self.root.bind('<Control-S>', lambda e: self._save_current_module())
+1005: 
+1006:         # ── Load plugins ──
+1007:         self.plugins = []
+1008:         self._load_plugins()
+1009: 
+1010:     # ================================================================
+1011:     #  Undo / Redo
+1012:     # ================================================================
+1013: 
+1014: 
+1015:     # ── Module Attribute Routing ──
+1016:     _ROUTED_ATTRS = frozenset([
+1017:         '_attr_vars',
+1018:         '_btn_add_eq',
+1019:         '_btn_clr_eq',
+1020:         '_btn_move_down',
+1021:         '_btn_move_up',
+1022:         '_btn_rm_eq',
+1023:         '_current_tab',
+1024:         '_detail_vars',
+1025:         '_dirty_upgrades',
+1026:         '_eq_height',
+1027:         '_face_key_map',
+1028:         '_guard',
+1029:         '_info_text',
+1030:         '_items_loaded',
+1031:         '_items_panel',
+1032:         '_items_redo_stack',
+1033:         '_items_undo_stack',
+1034:         '_prof_vars',
+1035:         '_raw_text',
+1036:         '_redo_stack',
+1037:         '_resize_dragging',
+1038:         '_resize_handle',
+1039:         '_resize_start_h',
+1040:         '_resize_start_y',
+1041:         '_save_btn',
+1042:         '_skill_vars',
+1043:         '_tab_btns',
+1044:         '_tab_frames',
+1045:         '_troops_loaded',
+1046:         '_troops_panel',
+1047:         '_undo_max',
+1048:         '_undo_stack',
+1049:         'detail_title',
+1050:         'eq_lb',
+1051:         'items_detail_title',
+1052:         'items_entries',
+1053:         'items_fields',
+1054:         'items_footer',
+1055:         'items_header',
+1056:         'items_info_text',
+1057:         'items_lb',
+1058:         'items_raw_text',
+1059:         'items_search_var',
+1060:         'items_selected_idx',
+1061:         'items_tab_btns',
+1062:         'items_tab_frames',
+1063:         'search_var',
+1064:         'selected_idx',
+1065:         'troop_lb',
+1066:         'troops_entries',
+1067:         'troops_fields',
+1068:         'troops_footer',
+1069:         'troops_header',
+1070:         'upgrade_tree',
+1071: 
+1072:     ])
+1073: 
+1074:     def __getattribute__(self, name):
+1075:         if name in TianyouEditor._ROUTED_ATTRS:
+1076:             mod = object.__getattribute__(self, '_active_module')
+1077:             if mod is not None and hasattr(mod, name):
+1078:                 return getattr(mod, name)
+1079:         return object.__getattribute__(self, name)
+1080: 

@@ -1,0 +1,53 @@
+1: class EditorModule(object):
+2:     """Base class for editor modules (troops, items, etc.)."""
+3:     def __init__(self, editor, name):
+4:         self.editor = editor
+5:         self.name = name
+6:         self._undo_stack = []
+7:         self._redo_stack = []
+8:         self._undo_max = 50
+9:         self.selected_idx = -1
+10:         self._loaded = False
+11:         self._built = False
+12:         self.panel = None
+13: 
+14:     @property
+15:     def mod_path(self):
+16:         return self.editor.mod_path
+17: 
+18:     @property
+19:     def source_path(self):
+20:         return self.editor.source_path
+21: 
+22:     @property
+23:     def root(self):
+24:         return self.editor.root
+25: 
+26:     def push_undo(self, snapshot):
+27:         self._undo_stack.append(snapshot)
+28:         if len(self._undo_stack) > self._undo_max:
+29:             self._undo_stack.pop(0)
+30:         self._redo_stack = []
+31: 
+32:     def undo(self):
+33:         raise NotImplementedError
+34: 
+35:     def redo(self):
+36:         raise NotImplementedError
+37: 
+38:     def build_panel(self, parent):
+39:         raise NotImplementedError
+40: 
+41:     def load(self):
+42:         raise NotImplementedError
+43: 
+44:     def save(self):
+45:         raise NotImplementedError
+46: 
+47:     def on_show(self):
+48:         pass
+49: 
+50:     def on_hide(self):
+51:         pass
+52: 
+53: 

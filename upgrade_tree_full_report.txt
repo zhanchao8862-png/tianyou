@@ -1,0 +1,138 @@
+======================================================================
+Mount & Blade Warband - Ahao MOD Upgrade Tree Analysis
+======================================================================
+
+Summary:
+  Total troops: 1667
+  With upgrades: 160
+  Roots (no parent): 1463
+  Leafs (no children): 1507
+  Branches (2 children): 67
+
+----------------------------------------------------------------------
+Upgrade Chains (depth-first from roots)
+----------------------------------------------------------------------
+  Chain 1 (depth=5):
+    refugee(Refugee) -> follower_woman(Camp Follower) -> hunter_woman(Huntress) -> fighter_woman(Camp Defender) -> sword_sister(Sword Sister)
+  Chain 2 (depth=5):
+    junggar_levies_herdsman(Junggar levies herdsman) -> junggar_levies_riding_bowman(Junggar levies riding bowman) -> junggar_ji_an_bowman(Junggar ji an bowman) -> junggar_hackbuteer(Junggar hackbuteer) -> junggar_firelock_camel(Junggar firelock camel)
+  Chain 3 (depth=5):
+    moroccan_mercenarie(Moroccan mercenarie) -> moroccan_spear(Moroccan spear) -> moroccan_super_spear(Moroccan super spear) -> moroccan_warrior(Moroccan warrior) -> spanish_colony_spear(Spanish colony spear)
+  Chain 4 (depth=5):
+    japan_knight_assistant(Japan knight assistant) -> japan_shogun_bower(Japan Shogun bower) -> japan_shogun_musketeer(Japan Shogun musketeer) -> japan_shogun_good_musketeer(Japan Shogun good musketeer) -> japan_shogun_musketeer_standard_bearer(Japan Shogun musketeer standard bearer)
+  Chain 5 (depth=5):
+    peasant_woman(Peasant Woman) -> follower_woman(Camp Follower) -> hunter_woman(Huntress) -> fighter_woman(Camp Defender) -> sword_sister(Sword Sister)
+  Chain 6 (depth=4):
+    smuggler(Smuggler) -> sea_raider_new(Sea Raider) -> pirate(Pirate) -> pirate_chief(Pirate Chief)
+  Chain 7 (depth=4):
+    khoshut_pikeman(Khoshut pikeman) -> khoshut_swordsman(Khoshut noble swordsman) -> khoshut_warrior(Khoshut warrior) -> khoshut_noble_warrior(Khoshut noble warrior)
+  Chain 8 (depth=4):
+    joseon_official_spear(Joseon official spear) -> joseon_official_bowman(Joseon official bowman) -> joseon_chain_vest_bowman(Joseon chain vest bowman) -> joseon_good_archer(Joseon good archer)
+  Chain 9 (depth=4):
+    wu_prince_zhong_yong_battalion_pikeman(Wu prince zhong yong battalion pikeman) -> wu_prince_yi_yong_battalion_bower(Wu prince yi yong battalion bower) -> wu_prince_yi_yong_battalion_three_port_hackbuteer(Wu prince yi yong battalion three port hackbuteer) -> wu_prince_yi_yong_battalion_sharpshooter(Wu prince yi yong battalion sharpshooter)
+  Chain 10 (depth=4):
+    russia_levies_militia(Russia levies militia) -> cossack_militia(Cossack militia) -> cossack_carbine_shooter(Cossack carbine shooter) -> cossack_musketeer(Cossack musketeer)
+  Chain 11 (depth=4):
+    kazakh_herdsman(Kazakh herdsman) -> kazakh_tribe_riding_bowman(Kazakh tribe riding bowman) -> kazakh_standing_lancer(Kazakh standing lancer) -> kazakh_noble_lancer(Kazakh noble lancer)
+  Chain 12 (depth=4):
+    rogue(Rogue) -> villain(Villain) -> fugitive_new(Fugitive) -> gang_leader(Gang Leader)
+  Chain 13 (depth=4):
+    geng_prince_light_pikeman(Geng prince light pikeman) -> geng_prince_official_light_bower(Geng prince official light bower) -> geng_prince_official_three_port_hackbuteer(Geng prince official three port hackbuteer) -> geng_prince_imperial_sharpshooter(Geng prince imperial sharpshooter)
+  Chain 14 (depth=4):
+    mountain_bandit_new(Mountain Bandit) -> clear(Clear) -> subchief(Subchief) -> mountain_castellan(Mountain Castellan)
+  Chain 15 (depth=4):
+    ming_zheng_jun_jian(Ming zheng jun jian) -> ming_zheng_bow_guerrilla(Ming zheng bow guerrilla) -> ming_zheng_yuan_jiao_musketeer(Ming zheng yuan jiao musketeer) -> ming_zheng_shen_ji_marksman(Ming zheng shen ji musketeer)
+  Chain 16 (depth=4):
+    slave_driver(Slave Driver) -> slave_hunter(Slave Hunter) -> slave_crusher(Slave Crusher) -> slaver_chief(Slaver Chief)
+  Chain 17 (depth=4):
+    mongol_levies_herdsman(Mongol levies herdsman) -> mongol_light_riding_bowman(Mongol light riding bowman) -> mongol_lancer(Mongol lancer) -> nakeer_guard_knight(Nakeer guard knight)
+  Chain 18 (depth=4):
+    qing_green_soldier(Qing green soldier) -> qing_green_bowman(Qing green bowman) -> qing_green_hackbuteer(Qing green hackbuteer) -> qing_green_senior_hackbuteer(Qing green senior hackbuteer)
+  Chain 19 (depth=3):
+    japan_rural_scholar(Japan rural scholar) -> japan_wai_yang_Prince_bower_militiaman(Japan wai yang Prince bower militiaman) -> japan_pu_dai_Prince_bower_militiaman(Japan pu dai Prince bower militiaman)
+  Chain 20 (depth=3):
+    townsman(Townsman) -> watchman(Watchman) -> mercenary_crossbowman(Mercenary Crossbowman)
+  Chain 21 (depth=3):
+    portugal_colony_armed_civilian(Portugal colony armed civilian) -> portugal_colony_armed_merchant(Portugal colony armed merchant) -> portugal_colony_musketeer(Portugal colony musketeer)
+  Chain 22 (depth=3):
+    farmer(Farmer) -> watchman(Watchman) -> mercenary_crossbowman(Mercenary Crossbowman)
+  Chain 23 (depth=3):
+    straggler(Straggler) -> riffraff(Riffraff) -> rebel(Rebel)
+  Chain 24 (depth=3):
+    bandit_new(Bandit) -> brigand_new(Brigand) -> bandit_leader(Bandit Leader)
+  Chain 25 (depth=3):
+    qing_eight_banner_soldier(Qing eight banner soldier) -> qing_eight_banner_cavalry(Qing eight banner cavalry) -> qing_eight_banner_guard_bow_cavalry(Qing eight banner guard bow cavalry)
+  Chain 26 (depth=3):
+    bandit(Bandit) -> mercenary_swordsman(Mercenary Swordsman) -> hired_blade(Hired Blade)
+  Chain 27 (depth=3):
+    cossacks_pioneer(Cossacks Pioneer) -> cossacks_bandit(Cossacks Bandit) -> cossacks_horseman(Cossacks Horseman)
+  Chain 28 (depth=3):
+    ming_zheng_farmer(Ming zheng farmer) -> ming_zheng_village_bower(Ming zheng village bower) -> ming_zheng_good_bower(Ming zheng good bower)
+  Chain 29 (depth=3):
+    looter(Looter) -> forest_bandit(Forest Bandit) -> swadian_recruit(Swadian Recruit)
+  Chain 30 (depth=3):
+    shang_prince_green_soldier(Shang prince green soldier) -> shang_prince_green_bow_soldier(Shang prince green bow soldier) -> shang_prince_green_hackbuteer(Shang prince green hackbuteer)
+  Chain 31 (depth=3):
+    mounted_brigand(Mounted Brigand) -> horse_bandit(Horse Bandit) -> bandit_chieftain(Bandit Chieftain)
+  Chain 32 (depth=2):
+    heroes_end({!}heroes end) -> tf_hero|tf_female(tf_hero|tf_female)
+  Chain 33 (depth=2):
+    taiwan_town_walker_1(Townsman) -> korean_face4(korean_face4)
+  Chain 34 (depth=2):
+    sea_raider(Sea Raider) -> nord_recruit(Nord Recruit)
+  Chain 35 (depth=2):
+    joseon_farmer(Joseon farmer) -> joseon_insurrectionary_bower(Joseon zheng farmer)
+  Chain 36 (depth=2):
+    edo_town_walker_1(Townsman) -> korean_face4(korean_face4)
+  Chain 37 (depth=2):
+    portugal_colony_civilian(Portugal colony civilian) -> portugal_colony_adventurer(Portugal colony adventurer)
+  Chain 38 (depth=2):
+    kingdom_6_lady_20(Lady Sur) -> tf_hero|tf_female(tf_hero|tf_female)
+  Chain 39 (depth=2):
+    kingdom_6_pretender(Arwa the Pearled One) -> tf_hero(tf_hero)
+  Chain 40 (depth=2):
+    temp_troop(Temp Troop) -> no_scene(no_scene)
+  Chain 41 (depth=2):
+    korean_town_walker_1(Townsman) -> korean_face4(korean_face4)
+  Chain 42 (depth=2):
+    tibetan_town_walker_1(Townsman) -> korean_face4(korean_face4)
+  Chain 43 (depth=2):
+    town_40_arena_master(Tournament Master) -> tf_hero(tf_hero)
+  Chain 44 (depth=2):
+    maguindanao_sultanate_civilian(Maguindanao sultanate civilian) -> maguindanao_sultanate_warrior(Maguindanao sultanate warrior)
+  Chain 45 (depth=2):
+    geng_prince_farmer(Geng prince farmer) -> geng_prince_big_macheter(Geng prince big macheter)
+  Chain 46 (depth=2):
+    mongol_herdsman(Mongol herdsman) -> mongol_horseman(Mongol horseman)
+  Chain 47 (depth=2):
+    cossack_poor(Cossack poor) -> cossack_reiver(Cossack reiver)
+  Chain 48 (depth=2):
+    steppe_bandit(Steppe Bandit) -> khergit_tribesman(Khergit Tribesman)
+  Chain 49 (depth=2):
+    taiga_bandit(Taiga Bandit) -> vaegir_recruit(Vaegir Recruit)
+  Chain 50 (depth=2):
+    desert_bandit(Desert Bandit) -> sarranid_recruit(Sarranid Recruit)
+
+----------------------------------------------------------------------
+Max Depth per Troop
+----------------------------------------------------------------------
+  refugee (Refugee) -> max depth 5
+  joseon_official_spear (Joseon official spear) -> max depth 5
+  junggar_levies_herdsman (Junggar levies herdsman) -> max depth 5
+  townsman (Townsman) -> max depth 5
+  moroccan_mercenarie (Moroccan mercenarie) -> max depth 5
+  farmer (Farmer) -> max depth 5
+  japan_knight_assistant (Japan knight assistant) -> max depth 5
+  ming_zheng_jun_jian (Ming zheng jun jian) -> max depth 5
+  qing_green_soldier (Qing green soldier) -> max depth 5
+  peasant_woman (Peasant Woman) -> max depth 5
+  smuggler (Smuggler) -> max depth 4
+  khoshut_pikeman (Khoshut pikeman) -> max depth 4
+  wu_prince_zhong_yong_battalion_pikeman (Wu prince zhong yong battalion pikeman) -> max depth 4
+  joseon_official_swordsman (Joseon official swordsman) -> max depth 4
+  russia_levies_militia (Russia levies militia) -> max depth 4
+  japan_shogun_pikeman (Japan Shogun pikeman) -> max depth 4
+  kazakh_herdsman (Kazakh herdsman) -> max depth 4
+  rogue (Rogue) -> max depth 4
+  geng_prince_light_pikeman (Geng prince light pikeman) -> max depth 4
+  mountain_bandit_new (Mountain Bandit) -> max depth 4
