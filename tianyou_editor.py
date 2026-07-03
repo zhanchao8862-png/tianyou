@@ -73,7 +73,7 @@ CHANGELOG = [
     },
 ]
 
-import os, sys, re, codecs, shutil, subprocess, copy, json, time
+import os, sys, re, codecs, shutil, subprocess, copy, json, time, traceback, logging
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
@@ -931,8 +931,8 @@ class EditorModule(object):
         if tid:
             self.editor.root.clipboard_clear()
             self.editor.root.clipboard_append(tid)
-            if hasattr(self.editor, 'status_var'):
-                self.editor.status_var.set(u'\u2713 \u5df2\u590d\u5236 ID: ' + tid)
+            if hasattr(self.editor, '_set_status'):
+                self.editor._set_status(u'\u2713 \u5df2\u590d\u5236 ID: ' + tid)
 
     @property
     def mod_path(self):
@@ -1039,6 +1039,7 @@ class ItemModule(EditorModule):
 class TianyouEditor(object):
     def __init__(self):
         self.root = tk.Tk()
+        self._setup_debug_runtime()
         try:
             self.root.geometry("1280x850+100+50")
         except:
@@ -1091,39 +1092,68 @@ class TianyouEditor(object):
         self._build_menubar()
         self._build_ui()
         self._build_statusbar()
-        # Root-level mousewheel dispatch: Windows sends MouseWheel to focused
-        # widget, not the widget under cursor. We check cursor position instead.
-        # Neutralize default class-level scroll bindings so bind_all has sole control.
         self.root.bind_class('Listbox', '<MouseWheel>', lambda e: None)
         self.root.bind_class('Canvas', '<MouseWheel>', lambda e: None)
         self.root.bind_all('<MouseWheel>', self._on_global_wheel)
         self._set_ui_state(False)
         self.root.bind('<Configure>', self._on_root_configure)
-
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
-
-        # Auto-load on startup if paths are valid
-        self.status.config(text=u"就绪 - [文件] → [打开MOD] 加载项目")
+        if hasattr(self, 'status') and self.status is not None:
+            self.status.config(text=u"就绪 - [文件] → [打开MOD] 加载项目")
         self._update_title()
-
-        # Apply saved appearance
         if self._config.get('bg_color'):
             self._apply_bg_color(self.root, self._config['bg_color'])
         self._apply_font_size(self.font_size)
-
         if self.mod_path and os.path.isdir(self.mod_path):
             self.root.after(100, self._auto_load)
-
         self.root.bind('<Control-z>', lambda e: self._undo())
         self.root.bind('<Control-Z>', lambda e: self._undo())
         self.root.bind('<Control-y>', lambda e: self._redo())
         self.root.bind('<Control-Y>', lambda e: self._redo())
         self.root.bind('<Control-s>', lambda e: self._save_current_module())
         self.root.bind('<Control-S>', lambda e: self._save_current_module())
-
-        # ── Load plugins ──
         self.plugins = []
         self._load_plugins()
+        # Root-level mousewheel dispatch: Windows sends MouseWheel to focused
+        # widget, not the widget under cursor. We check cursor position instead.
+        # Neutralize default class-level scroll bindings so bind_all has sole control.
+
+    def _setup_debug_runtime(self):
+        """Write exceptions to console and a local log file for dev runs."""
+        try:
+            base_dir = os.path.dirname(os.path.abspath(__file__))
+        except Exception:
+            base_dir = os.getcwd()
+        self._debug_log_path = os.path.join(base_dir, 'tianyou_editor_debug.log')
+        try:
+            logging.basicConfig(
+                level=logging.INFO,
+                format='%(asctime)s %(levelname)s %(message)s',
+                filename=self._debug_log_path,
+                filemode='a'
+            )
+        except Exception:
+            pass
+        def _hook(exc_type, exc, tb):
+            msg = ''.join(traceback.format_exception(exc_type, exc, tb))
+            try:
+                logging.error(msg)
+            except Exception:
+                pass
+            try:
+                head = msg.splitlines()[-1] if msg.splitlines() else u'运行错误'
+                self._set_status(head[:120])
+            except Exception:
+                pass
+            try:
+                tkMessageBox.showerror(u'运行错误', msg.decode('utf-8', 'ignore') if isinstance(msg, str) else msg)
+            except Exception:
+                pass
+        sys.excepthook = _hook
+        try:
+            self.root.report_callback_exception = lambda et, ev, tb: _hook(et, ev, tb)
+        except Exception:
+            pass
 
     # ================================================================
     #  Undo / Redo
@@ -1389,6 +1419,7 @@ class TianyouEditor(object):
         dm = tk.Menu(menubar, tearoff=0)
         dm.add_command(label=u"更新日志", command=self._show_changelog)
         dm.add_command(label=u"教程", command=self._show_tutorial)
+        dm.add_command(label=u"调试日志", command=self._show_debug_console)
         dm.add_separator()
         dm.add_command(label=u"关于", command=self._about)
         menubar.add_cascade(label=u"开发者", menu=dm)
@@ -2776,10 +2807,24 @@ class TianyouEditor(object):
     def _build_statusbar(self):
         sf = tk.Frame(self.root, bd=1, relief='sunken')
         sf.pack(side='bottom', fill='x')
-        self.status = tk.Label(sf, text="", anchor='w')
+        self.status_var = tk.StringVar(value='')
+        self.status = tk.Label(sf, textvariable=self.status_var, anchor='w')
         self.status.pack(side='left', fill='x', expand=1, padx=5)
         self._count_lbl = tk.Label(sf, text="", anchor='e')
         self._count_lbl.pack(side='right', padx=5)
+
+    def _set_status(self, text):
+        try:
+            if hasattr(self, 'status_var') and self.status_var is not None:
+                self.status_var.set(text)
+                return
+        except Exception:
+            pass
+        try:
+            if hasattr(self, 'status') and self.status is not None:
+                self.status.config(text=text)
+        except Exception:
+            pass
 
     def _set_ui_state(self, enabled):
         state = 'normal' if enabled else 'disabled'
@@ -3306,7 +3351,7 @@ class TianyouEditor(object):
                     self.item_cn[full_id] = new_val
                 elif full_id in self.item_cn:
                     del self.item_cn[full_id]
-                self.status_var.set(u'\u2713 \u6c49\u5316\u5df2\u66f4\u65b0: ' + (new_val or u'(\u5df2\u6e05\u9664)'))
+                self._set_status(u'\u2713 \u6c49\u5316\u5df2\u66f4\u65b0: ' + (new_val or u'(\u5df2\u6e05\u9664)'))
                 # Refresh cached display and visible list inline instead of full rebuild
                 if hasattr(self, '_item_display_cache'):
                     for ci, (real_idx, cached_id, cached_zh, cached_display) in enumerate(self._item_display_cache):
@@ -5042,6 +5087,45 @@ class TianyouEditor(object):
         text.insert('1.0', tutorial)
         text.config(state='disabled')
         tk.Button(dlg, text=u"关闭", command=dlg.destroy, width=12).pack(pady=10)
+
+    def _show_debug_console(self):
+        """Show runtime log content inside the app."""
+        dlg = tk.Toplevel(self.root)
+        dlg.title(u"调试日志")
+        dlg.geometry("900x520")
+        dlg.transient(self.root)
+
+        top = tk.Frame(dlg)
+        top.pack(fill='x', padx=6, pady=4)
+        tk.Label(top, text=u"日志文件:").pack(side='left')
+        path_var = tk.StringVar(value=getattr(self, '_debug_log_path', ''))
+        tk.Entry(top, textvariable=path_var, state='readonly').pack(side='left', fill='x', expand=1, padx=6)
+
+        body = tk.Frame(dlg)
+        body.pack(fill='both', expand=1, padx=6, pady=6)
+        sb = tk.Scrollbar(body)
+        sb.pack(side='right', fill='y')
+        text = tk.Text(body, font=('Consolas', 10), wrap='none', yscrollcommand=sb.set)
+        text.pack(side='left', fill='both', expand=1)
+        sb.config(command=text.yview)
+
+        def refresh():
+            text.config(state='normal')
+            text.delete('1.0', 'end')
+            p = getattr(self, '_debug_log_path', '')
+            if p and os.path.isfile(p):
+                try:
+                    with codecs.open(p, 'r', 'utf-8', errors='replace') as f:
+                        text.insert('1.0', f.read())
+                except Exception as e:
+                    text.insert('1.0', unicode(e))
+            else:
+                text.insert('1.0', u'暂无日志。请先触发一次报错或运行输出。')
+            text.config(state='disabled')
+
+        tk.Button(top, text=u"刷新", width=10, command=refresh).pack(side='right')
+        refresh()
+        dlg.after(1500, refresh)
 
     # ================================================================
     #  Lifecycle
