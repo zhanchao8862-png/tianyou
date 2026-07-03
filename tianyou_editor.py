@@ -1603,16 +1603,27 @@ class TianyouEditor(object):
         # Action buttons
         bf = tk.Frame(left)
         bf.pack(fill='x', pady=5)
-        tk.Button(bf, text=u"新增兵种", command=self._add_troop, width=8).pack(side='left', padx=2)
-        tk.Button(bf, text=u"复制兵种", command=self._copy_troop, width=8).pack(side='left', padx=2)
-        tk.Button(bf, text=u"删除兵种", command=self._delete_troop, width=8).pack(side='left', padx=2)
-        self._btn_move_up = tk.Button(bf, text=u"▲", command=self._move_troop_up, width=2)
+        top_ops = tk.Frame(bf)
+        top_ops.pack(fill='x')
+        tk.Button(top_ops, text=u"新增兵种", command=self._add_troop, width=8).pack(side='left', padx=2)
+        tk.Button(top_ops, text=u"复制兵种", command=self._copy_troop, width=8).pack(side='left', padx=2)
+        tk.Button(top_ops, text=u"删除兵种", command=self._delete_troop, width=8).pack(side='left', padx=2)
+        self._btn_move_up = tk.Button(top_ops, text=u"▲", command=self._move_troop_up, width=2)
         self._btn_move_up.pack(side='left', padx=1)
-        self._btn_move_down = tk.Button(bf, text=u"▼", command=self._move_troop_down, width=2)
+        self._btn_move_down = tk.Button(top_ops, text=u"▼", command=self._move_troop_down, width=2)
         self._btn_move_down.pack(side='left', padx=1)
-        self._save_btn = tk.Button(bf, text=u"保  存", command=self._save_troops, width=8,
-                                    bg='#4CAF50', fg='white')
-        self._save_btn.pack(side='right', padx=2)
+
+        bottom_ops = tk.Frame(bf)
+        bottom_ops.pack(fill='x', pady=(4, 0))
+        self._save_btn = tk.Button(bottom_ops, text=u"保  存", command=self._save_troops, width=8,
+                                   bg='#4CAF50', fg='white')
+        self._save_btn.pack(side='left', padx=2)
+        self._troop_reset_btn = tk.Button(bottom_ops, text=u"重置", command=self._revert_from_source, width=8,
+                                          bg='#607D8B', fg='white')
+        self._troop_reset_btn.pack(side='left', padx=2)
+        self._troop_apply_btn = tk.Button(bottom_ops, text=u"应用修改", command=self._apply_detail_changes, width=10,
+                                          bg='#FF9800', fg='white')
+        self._troop_apply_btn.pack(side='left', padx=2)
 
         # ── Right panel ──
         right = tk.Frame(main)
@@ -1760,7 +1771,10 @@ class TianyouEditor(object):
         under cursor. So we check cursor position instead of event.widget."""
         px = self.root.winfo_pointerx()
         py = self.root.winfo_pointery()
-        w = self.root.winfo_containing(px, py)
+        try:
+            w = self.root.winfo_containing(px, py)
+        except Exception:
+            return
         if w is None:
             return
         # Don't intercept Spinbox scroll (Spinbox uses wheel for value change)
@@ -1769,7 +1783,21 @@ class TianyouEditor(object):
         # Walk up the widget tree to find which scroll region we're in
         widget = w
         while widget is not None:
+            # Prefer the nearest nested scrolled canvas, so inner panels like
+            # itcf_ flags scroll themselves instead of the outer item-detail canvas.
+            nested_canvas = self._find_scrolled_canvas(widget, stop_at=getattr(self, '_item_detail_canvas', None))
+            if nested_canvas is not None and nested_canvas is not getattr(self, '_item_detail_canvas', None):
+                try:
+                    nested_canvas.yview_scroll(int(-1 * (event.delta / 120)), 'units')
+                    return 'break'
+                except Exception:
+                    pass
             if hasattr(self, '_faction_combo') and widget is self._faction_combo:
+                try:
+                    return self.item_sections.get('triggers')._on_faction_wheel(event)
+                except Exception:
+                    return 'break'
+            if hasattr(self, '_faction_combo') and widget.winfo_class() == 'TCombobox':
                 try:
                     return self.item_sections.get('triggers')._on_faction_wheel(event)
                 except Exception:
@@ -1805,6 +1833,15 @@ class TianyouEditor(object):
                 return 'break'
             widget = widget.master
         return
+
+    def _find_scrolled_canvas(self, widget, stop_at=None):
+        """Find the nearest ancestor with a nested _canvas scrollable frame."""
+        while widget is not None and widget is not stop_at:
+            canvas = getattr(widget, '_canvas', None)
+            if canvas is not None:
+                return canvas
+            widget = getattr(widget, 'master', None)
+        return None
 
     def _is_descendant(self, widget, ancestor):
         while widget is not None:
@@ -2994,10 +3031,18 @@ class TianyouEditor(object):
         lf = tk.LabelFrame(left, text=u"\u7269\u54c1\u5217\u8868")
         lf.pack(expand=1, fill='both')
 
-        self.items_lb = tk.Listbox(lf, font=('Consolas', 10), exportselection=False)
+        self.items_lb = tk.Listbox(
+            lf,
+            font=('Consolas', 10),
+            exportselection=False,
+            selectbackground='#0078d7',
+            selectforeground='white',
+            activestyle='none',
+        )
         self.items_lb.pack(side='left', expand=1, fill='both')
         self.items_lb.bind('<<ListboxSelect>>', self._on_items_select)
         self.items_lb.bind('<Double-Button-1>', self._on_items_dblclick)
+        self.items_lb.bind('<MouseWheel>', self._on_global_wheel)
         lsb = tk.Scrollbar(lf, command=self.items_lb.yview)
         lsb.pack(side='right', fill='y')
         self.items_lb.config(yscrollcommand=lsb.set)
@@ -3005,17 +3050,25 @@ class TianyouEditor(object):
         # Action buttons
         bf = tk.Frame(left)
         bf.pack(fill='x', pady=5)
-        tk.Button(bf, text=u"\u65b0\u589e", command=self._add_item, width=6).pack(side='left', padx=2)
-        tk.Button(bf, text=u"\u590d\u5236", command=self._copy_item, width=6).pack(side='left', padx=2)
-        tk.Button(bf, text=u"\u5220\u9664", command=self._delete_item, width=6).pack(side='left', padx=2)
-        tk.Button(bf, text=u"\u25b2", command=self._move_item_up, width=2).pack(side='left', padx=1)
-        tk.Button(bf, text=u"\u25bc", command=self._move_item_down, width=2).pack(side='left', padx=1)
-        self._items_apply_btn = tk.Button(bf, text=u"\u5e94\u7528\u4fee\u6539", command=self._apply_items_detail,
-                                            width=10, bg='#FF9800', fg='white')
-        self._items_apply_btn.pack(side='right', padx=2)
-        self._items_save_btn = tk.Button(bf, text=u"\u4fdd  \u5b58", command=self._save_items, width=8,
-                                          bg='#4CAF50', fg='white')
-        self._items_save_btn.pack(side='right', padx=2)
+        top_ops = tk.Frame(bf)
+        top_ops.pack(fill='x')
+        tk.Button(top_ops, text=u"\u65b0\u589e", command=self._add_item, width=6).pack(side='left', padx=2)
+        tk.Button(top_ops, text=u"\u590d\u5236", command=self._copy_item, width=6).pack(side='left', padx=2)
+        tk.Button(top_ops, text=u"\u5220\u9664", command=self._delete_item, width=6).pack(side='left', padx=2)
+        tk.Button(top_ops, text=u"\u25b2", command=self._move_item_up, width=2).pack(side='left', padx=1)
+        tk.Button(top_ops, text=u"\u25bc", command=self._move_item_down, width=2).pack(side='left', padx=1)
+
+        bottom_ops = tk.Frame(bf)
+        bottom_ops.pack(fill='x', pady=(4, 0))
+        self._items_save_btn = tk.Button(bottom_ops, text=u"\u4fdd  \u5b58", command=self._save_items, width=8,
+                                         bg='#4CAF50', fg='white')
+        self._items_save_btn.pack(side='left', padx=2)
+        self._items_reset_btn = tk.Button(bottom_ops, text=u"\u91cd\u7f6e", command=self._reset_items_detail,
+                                          width=8, bg='#607D8B', fg='white')
+        self._items_reset_btn.pack(side='left', padx=2)
+        self._items_apply_btn = tk.Button(bottom_ops, text=u"\u5e94\u7528\u4fee\u6539", command=self._apply_items_detail,
+                                          width=10, bg='#FF9800', fg='white')
+        self._items_apply_btn.pack(side='left', padx=2)
 
         # Right panel
         right = tk.Frame(main)
@@ -3067,6 +3120,7 @@ class TianyouEditor(object):
         self._items_info_text = tk.Text(self._items_tab_frames['info'], font=('Consolas', 10),
                                         wrap='word', state='disabled')
         self._items_info_text.pack(expand=1, fill='both')
+        self._items_info_text.bind('<MouseWheel>', self._on_global_wheel)
 
         # Items detail canvas (scrollable form)
         self._build_item_detail_panel(self._items_tab_frames['detail'])
@@ -3075,6 +3129,7 @@ class TianyouEditor(object):
         self._items_raw_text = tk.Text(self._items_tab_frames['raw'], font=('Consolas', 10),
                                        wrap='none', undo=True)
         self._items_raw_text.pack(expand=1, fill='both')
+        self._items_raw_text.bind('<MouseWheel>', self._on_global_wheel)
         for seq in ('<Control-z>', '<Control-Z>'):
             self._items_raw_text.bind(seq, lambda e: self._items_raw_text.edit_undo() or 'break')
         for seq in ('<Control-y>', '<Control-Y>'):
@@ -3180,6 +3235,15 @@ class TianyouEditor(object):
         if not hasattr(self, 'items_lb'):
             return
         self._ensure_item_display_cache()
+        cur_full_id = ''
+        cur_idx = getattr(self, '_current_item_idx', -1)
+        if 0 <= cur_idx < len(getattr(self, 'items_fields', [])):
+            try:
+                cur_flds = self.items_fields[cur_idx]
+                cur_raw_id = cur_flds[0].strip('"').strip("'") if cur_flds else ''
+                cur_full_id = 'itm_' + cur_raw_id if cur_raw_id and not cur_raw_id.startswith('itm_') else cur_raw_id
+            except Exception:
+                cur_full_id = ''
         self.items_lb.delete(0, 'end')
         self._items_list_index_map = []
         ft = filter_text.lower()
@@ -3198,12 +3262,34 @@ class TianyouEditor(object):
         if batch:
             self.items_lb.insert('end', *batch)
             self._items_list_index_map.extend(batch_map)
+        if cur_full_id:
+            for vis_idx, real_idx in enumerate(self._items_list_index_map):
+                if 0 <= real_idx < len(getattr(self, 'items_fields', [])):
+                    try:
+                        pflds = self.items_fields[real_idx]
+                        raw_id = pflds[0].strip('"').strip("'") if pflds else ''
+                        full_id = 'itm_' + raw_id if raw_id and not raw_id.startswith('itm_') else raw_id
+                    except Exception:
+                        full_id = ''
+                    if full_id == cur_full_id:
+                        self.items_lb.selection_clear(0, 'end')
+                        self.items_lb.selection_set(vis_idx)
+                        self.items_lb.activate(vis_idx)
+                        self.items_lb.see(vis_idx)
+                        break
 
     def _on_items_select(self, event):
         sel = self.items_lb.curselection()
         if not sel:
             return
         vis_idx = sel[0]
+        try:
+            self.items_lb.selection_clear(0, 'end')
+            self.items_lb.selection_set(vis_idx)
+            self.items_lb.activate(vis_idx)
+            self.items_lb.see(vis_idx)
+        except Exception:
+            pass
         if hasattr(self, '_items_list_index_map') and vis_idx < len(self._items_list_index_map):
             self._show_items_detail(self._items_list_index_map[vis_idx])
         else:
@@ -3374,6 +3460,17 @@ class TianyouEditor(object):
                                 display += u"  |  " + new_zh
                             self.items_lb.delete(vi)
                             self.items_lb.insert(vi, display)
+                            try:
+                                self.items_lb.selection_clear(0, 'end')
+                                if self._current_item_idx >= 0:
+                                    for cur_vis, cur_real in enumerate(self._items_list_index_map):
+                                        if cur_real == self._current_item_idx:
+                                            self.items_lb.selection_set(cur_vis)
+                                            self.items_lb.activate(cur_vis)
+                                            self.items_lb.see(cur_vis)
+                                            break
+                            except Exception:
+                                pass
                             break
                 # Refresh title
                 if hasattr(self, 'items_detail_title') and self._current_item_idx >= 0:
@@ -3560,6 +3657,44 @@ class TianyouEditor(object):
         self._rebuild_item_display_cache()
         self._populate_items_list()
         self.status.config(text=u"\u7269\u54c1\u8be6\u60c5\u5df2\u5e94\u7528 (\u672a\u4fdd\u5b58\u5230\u6587\u4ef6)")
+
+    def _reset_items_detail(self):
+        """Restore item editor state from module_items.py, discarding unsaved edits."""
+        if not self.source_path:
+            return
+        if not tkMessageBox.askyesno(u"\u786e\u8ba4\u91cd\u7f6e",
+                                     u"\u5c06\u91cd\u65b0\u8bfb\u53d6 module_items.py \u5e76\u653e\u5f03\u5f53\u524d\u672a\u4fdd\u5b58\u7684\u7269\u54c1\u4fee\u6539\u3002\n\n\u786e\u5b9a\u91cd\u7f6e?"):
+            return
+        cur_idx = self._current_item_idx if getattr(self, '_current_item_idx', -1) >= 0 else -1
+        cur_id = ''
+        if 0 <= cur_idx < len(getattr(self, 'items_fields', [])):
+            try:
+                flds = self.items_fields[cur_idx]
+                raw_id = flds[0].strip('"').strip("'") if flds else ''
+                cur_id = 'itm_' + raw_id if raw_id and not raw_id.startswith('itm_') else raw_id
+            except Exception:
+                cur_id = ''
+        self._load_items()
+        if cur_id:
+            for vis_idx, real_idx in enumerate(getattr(self, '_items_list_index_map', [])):
+                if 0 <= real_idx < len(getattr(self, 'items_fields', [])):
+                    try:
+                        flds = self.items_fields[real_idx]
+                        raw_id = flds[0].strip('"').strip("'") if flds else ''
+                        full_id = 'itm_' + raw_id if raw_id and not raw_id.startswith('itm_') else raw_id
+                    except Exception:
+                        full_id = ''
+                    if full_id == cur_id:
+                        try:
+                            self.items_lb.selection_clear(0, 'end')
+                            self.items_lb.selection_set(vis_idx)
+                            self.items_lb.activate(vis_idx)
+                            self.items_lb.see(vis_idx)
+                        except Exception:
+                            pass
+                        self._show_items_detail(real_idx)
+                        break
+        self.status.config(text=u"\u2705 \u7269\u54c1\u5df2\u91cd\u7f6e\u4e3a module_items.py \u5185\u5bb9")
 
     def _save_items(self):
         """Save items to module_items.py."""

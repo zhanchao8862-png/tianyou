@@ -669,6 +669,23 @@ class CapabilitiesSection(SectionController):
         inner._update_scroll = update_scrollregion
         return inner
 
+    def _wheel_bind_scrolled_tree(self, inner_frame):
+        """Ensure all descendants of a scrolled frame consume mousewheel."""
+        bind_wheel = getattr(inner_frame, '_bind_wheel', None)
+        if bind_wheel:
+            try:
+                bind_wheel(inner_frame)
+            except Exception:
+                pass
+        canvas = getattr(inner_frame, '_canvas', None)
+        if canvas is not None:
+            try:
+                canvas.bind('<MouseWheel>', lambda e, c=canvas: c.yview_scroll(-1 * int(e.delta / 120), 'units') or 'break')
+                canvas.bind('<Button-4>', lambda e, c=canvas: c.yview_scroll(-1, 'units') or 'break')
+                canvas.bind('<Button-5>', lambda e, c=canvas: c.yview_scroll(1, 'units') or 'break')
+            except Exception:
+                pass
+
     def _ensure_wheel_on_scrolled(self, inner_frame):
         """(Re)bind wheel recursively on a scrolled inner frame, using its own canvas closure."""
         bind_wheel = getattr(inner_frame, '_bind_wheel', None)
@@ -1115,6 +1132,23 @@ class ModifierSection(SectionController):
         self._mod_breakdown.insert('end', txt)
         self._mod_breakdown.config(state='disabled')
 
+    def _wheel_bind_scrolled_tree(self, inner_frame):
+        """Ensure all descendants of a scrolled frame consume mousewheel."""
+        bind_wheel = getattr(inner_frame, '_bind_wheel', None)
+        if bind_wheel:
+            try:
+                bind_wheel(inner_frame)
+            except Exception:
+                pass
+        canvas = getattr(inner_frame, '_canvas', None)
+        if canvas is not None:
+            try:
+                canvas.bind('<MouseWheel>', lambda e, c=canvas: c.yview_scroll(-1 * int(e.delta / 120), 'units') or 'break')
+                canvas.bind('<Button-4>', lambda e, c=canvas: c.yview_scroll(-1, 'units') or 'break')
+                canvas.bind('<Button-5>', lambda e, c=canvas: c.yview_scroll(1, 'units') or 'break')
+            except Exception:
+                pass
+
     def _make_scrolled_frame(self, parent, height=190):
         outer = tk.Frame(parent)
         outer.pack(fill='both', expand=1, padx=5, pady=2)
@@ -1186,13 +1220,7 @@ class ModifierSection(SectionController):
         # Update scrollregion after widgets rebuilt
         if getattr(self._mod_box_inner, '_update_scroll', None):
             self._mod_box_inner.after_idle(self._mod_box_inner._update_scroll)
-        # Use the inner frame's stored wheel binder
-        bind_wheel = getattr(self._mod_box_inner, '_bind_wheel', None)
-        if bind_wheel:
-            try:
-                bind_wheel(self._mod_box_inner)
-            except Exception:
-                pass
+        self._wheel_bind_scrolled_tree(self._mod_box_inner)
 
     def _ensure_preset_options(self):
         if self._preset_options:
@@ -1221,12 +1249,7 @@ class ModifierSection(SectionController):
         # Update scrollregion after widgets rebuilt
         if getattr(self._preset_box_inner, '_update_scroll', None):
             self._preset_box_inner.after_idle(self._preset_box_inner._update_scroll)
-        try:
-            bind_wheel = getattr(self._preset_box_inner, '_bind_wheel', None)
-            if bind_wheel:
-                bind_wheel(self._preset_box_inner)
-        except Exception:
-            pass
+        self._wheel_bind_scrolled_tree(self._preset_box_inner)
 
     def _apply_preset(self, preset_name):
         expanded = set(self._preset_map.get(preset_name, []))
@@ -1451,6 +1474,34 @@ class TriggersSection(SectionController):
         self._sync_faction_from_combo()
         return 'break'
 
+    def _bind_faction_popdown_wheel(self):
+        """Bind mousewheel to the combobox popdown list when it exists."""
+        combo = self._faction_combo
+        if not combo:
+            return
+        try:
+            popdown = combo.tk.call('ttk::combobox::PopdownWindow', str(combo))
+            listbox = combo.nametowidget(popdown + '.f.l')
+        except Exception:
+            return
+
+        def _popdown_wheel(event):
+            try:
+                step = -1 * int(getattr(event, 'delta', 0) / 120)
+                if step == 0:
+                    step = 1 if getattr(event, 'delta', 0) < 0 else -1
+                listbox.yview_scroll(step, 'units')
+            except Exception:
+                pass
+            return 'break'
+
+        try:
+            listbox.bind('<MouseWheel>', _popdown_wheel)
+            listbox.bind('<Button-4>', lambda e: _popdown_wheel(type('E', (), {'delta': 120})()))
+            listbox.bind('<Button-5>', lambda e: _popdown_wheel(type('E', (), {'delta': -120})()))
+        except Exception:
+            pass
+
     def build_ui(self, parent):
         lf = self._make_label_frame(parent, u'F8 \u89e6\u53d1 & F9 \u9635\u8425 (Triggers & Factions)')
         self._make_raw_row(lf, readonly=True)
@@ -1471,6 +1522,7 @@ class TriggersSection(SectionController):
                                            values=self._faction_options,
                                            state='readonly', width=30)
         self._faction_combo.pack(side='left', padx=2, fill='x', expand=1)
+        self._faction_combo.configure(postcommand=self._bind_faction_popdown_wheel)
         self._faction_combo.bind('<<ComboboxSelected>>', self._sync_faction_from_combo)
         self._faction_combo.bind('<MouseWheel>', self._on_faction_wheel)
         self._faction_combo.bind('<Button-4>', lambda e: self._on_faction_wheel(type('E', (), {'delta': 120})()))
