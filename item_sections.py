@@ -224,7 +224,7 @@ class BasicSection(SectionController):
             (u'F0 ID', 'id'),
             (u'F1 \u540d\u79f0', 'name'),
             (u'     \u6c49\u5316\u540d\u79f0', 'cn_name'),
-            (u'F5 \u4ef7\u503c (Value)', 'value'),
+            (u'F5 \u4ef7\u683c (Value)', 'value'),
         ]:
             row = tk.Frame(lf)
             row.pack(fill='x', padx=5, pady=1)
@@ -701,7 +701,7 @@ class CapabilitiesSection(SectionController):
         self._widget = lf
 
         # Sub-frame: itc_ templates (21 items)
-        tc_frame = tk.LabelFrame(lf, text=u'itc_ \u6a21\u677f')
+        tc_frame = tk.LabelFrame(lf, text=u'\u9884\u8bbe\u52a8\u4f5c')
         tc_frame.pack(fill='x', padx=5, pady=2)
         tc_inner = tk.Frame(tc_frame)
         tc_inner.pack(fill='x', padx=3, pady=2)
@@ -713,7 +713,7 @@ class CapabilitiesSection(SectionController):
             cb.grid(row=ti // 7, column=ti % 7, sticky='w', padx=3, pady=1)
             self.fields[tcn] = var
 
-        ex_frame = tk.LabelFrame(lf, text=u'itc_ \u6a21\u677f\u62c6\u89e3')
+        ex_frame = tk.LabelFrame(lf, text=u'\u9884\u8bbe\u52a8\u4f5c\u62c6\u89e3')
         ex_frame.pack(fill='x', padx=5, pady=2)
         ex_body = tk.Frame(ex_frame)
         ex_body.pack(fill='both', expand=1, padx=3, pady=2)
@@ -733,7 +733,7 @@ class CapabilitiesSection(SectionController):
         self._template_expansion_text.config(state='disabled')
 
         # Sub-frame: itcf_ flags by category
-        cf_frame = tk.LabelFrame(lf, text=u'itcf_ \u529f\u80fd\u65d7\u6807 (header_items.py)')
+        cf_frame = tk.LabelFrame(lf, text=u'\u5176\u4ed6\u6807\u8bb0\u548c\u52a8\u4f5c (itcf_ / header_items.py)')
         cf_frame.pack(fill='both', expand=1, padx=5, pady=2)
         cf_outer = self._make_scrolled_frame(cf_frame, height=360)
         itcf_categories = self._group_itcf_flags()
@@ -792,7 +792,7 @@ class OtherFlagsSection(SectionController):
         return ' | '.join(parts) if parts else '0'
 
     def build_ui(self, parent):
-        lf = self._make_label_frame(parent, u'\u5176\u4ed6\u6807\u8bb0 (Other Flags, bit-grouped)')
+        lf = self._make_label_frame(parent, u'\u5176\u4ed6\u6807\u8bb0\u548c\u52a8\u4f5c (Other Flags, bit-grouped)')
         self._make_raw_row(lf)
         self._widget = lf
         self.fields = self._make_checkbuttons_grid(lf, ITP_OTHER_FLAGS, columns=6)
